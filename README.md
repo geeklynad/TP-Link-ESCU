@@ -19,9 +19,9 @@ The Easy Smart Configuration Utility is used to administratively interface with 
 
 ### Attack conditions
 
-* The attacker must have visibility to capture broadcast domain transmissions within either a VLAN segment originating from the device, or a VLAN being routed through the device via trunk line to access ports.
+* The attacker must have visibility to capture broadcast domain transmissions within LAN or VLAN.
 * A user of the Easy Smart Configuration Utility must log into the device while the attacker is observing network traffic.
-* The attacker requires no prior authorization to the hardware or utility in order to extract encryption key to read packet data.
+* The attacker requires no prior authorization to the hardware or utility in order to extract encryption key and read unencrypted packet data.
 
 ### Easy Smart Configuration Utility packet encryption
 
@@ -55,15 +55,15 @@ The Easy Smart Configuration Utility was decompiled using JD-gui and Procyon. Th
 * `com.tplink.smb.easySmartUtility.transfer.This`
 * `com.tplink.smb.easySmartUtility.transfer.TLV`
 
-`Main.java` was created to break out methods to decrypt the key with TEA, then decrypt a given hexadecimal string obtained through Wireshark packet capture. The packet was performed on a secondary system on the same VLAN.
+`Main.java` was created to break out methods to decrypt the key with TEA, then decrypt a given hexadecimal string obtained through Wireshark packet capture. The capture was performed on a secondary system on the same VLAN.
 
-The Java proof of concept is available at this currently private github repository. Encrypted key byte array is redacted. 
+The Java proof of concept is available in this currently private github repository. Encrypted key byte array is redacted. 
 
 ### With Python
 
 Proof of concept was ported to Python by emulating Java bitwise handling performed. Despite the two languages having different integers types and endianness, it was still possible to recreate the entire procedure in Python, including both TEA decryption and RC4 decryption.
 
-The Python proof of concept is also available at this currently private github repository. Key is redacted. Included `dump.txt` file provides example packet capture including login credentials and device information.
+The Python proof of concept is also available in this currently private github repository. Key is redacted. Included `dump.txt` file provides example packet capture including login credentials and device information.
 
 ---
 
@@ -111,7 +111,9 @@ Previous reports were specific to single devices being analyzed. However, since 
 
 ### For the end user
 
-* In the current state of Easy Smart Configuration Utility v1.3.10, it is not advisable to use TL-SG105Ev5 (or other listed hardware) in a capacity of handling VLAN traffic for a security sensitive network. 
+* In the current state of Easy Smart Configuration Utility v1.3.10, it should not be advisable to use TL-SG105Ev5 (or other listed hardware) in a capacity of handling VLAN traffic for a security sensitive network. 
+
+* As the communication between utility and device are limited to the VLAN from which an user is connecting to the device, it should be recommended to only access the management interface through a more trusted network segment such as a management VLAN. This should limit the potential of packets being captured. Testing should be performed to verify that there is no "bleed through" of broadcast packets to other VLANs. Again, there does not appear to be a way to limit the switch to respond to only a designated VLAN. 
 
 * The switch may be relegated to a "dumb" switch capacity by disabling the trunk line and only being served a single untagged VLAN. The attack potential will be limited to only switch access. DoS and other administrative functions through the compromised hardware can still be obtained, but will be limited in scope to the single VLAN.  
 
@@ -119,7 +121,7 @@ Previous reports were specific to single devices being analyzed. However, since 
 
 ### For the manufacturer
 
-* The encryption was patched after [previous](https://goughlui.com/2018/11/03/not-so-smart-tp-link-tl-sg105e-v3-0-5-port-gigabit-easy-smart-switch/) [reports](https://www.pentestpartners.com/security-blog/how-i-can-gain-control-of-your-tp-link-home-switch/), however it still uses a static key. Using a secondary encryption to store a static key in a different form is still a static key. Continued use of a static key, no matter how many times it's encrypted, will ultimately result in the same vulnerability across all devices that use it.
+* The encryption was patched [after](https://chmod750.wordpress.com/2017/04/23/vulnerability-disclosure-tp-link/) [previous](https://goughlui.com/2018/11/03/not-so-smart-tp-link-tl-sg105e-v3-0-5-port-gigabit-easy-smart-switch/) [reports](https://www.pentestpartners.com/security-blog/how-i-can-gain-control-of-your-tp-link-home-switch/), however it still uses a static key. Using a secondary encryption to store a static key in a different form is still a static key. Continued use of a static key, no matter how many times it's encrypted, will ultimately result in the same vulnerability across all devices that use it.
 
 * Use of a protocol that utilizes secure key exchanging, such as TLS, would eliminate the issue of static key storage (and the secondary encryption), as fresh keys could be generated per session and exchanged. 
 
