@@ -3,7 +3,7 @@ Easy Smart Configuration Utility beta 14.0.0.162 was decompiled using Procyon an
 ### PRNG strength
 One factor to take into account in further analysis is whether the PRNG algorithm used can be considered "secure". Use of a weak PRNG algorithm can lead to a exploitable condition even within a strong encrpytion algorithm. Verification of the strength of the PRNG algorithm should be taken into account but it should also be noted that regardless of PRNG strength, this new encyrption scheme appears to be a vast improvement over the original static key RC4.
 ### Code cleanup
-In current Utility beta, `transfer.This` methoed `main` contains static key used for RC4 in plaintext. While this key no longers appears to be used for sensitive data transmission, it would be advisable to remove the reference. Other sections of altered code should be examined to ensure that excess information is not easily revealed through decompilation.
+In current Utility beta, `transfer.This` method `main` contains static key used for RC4 in plaintext. While this key no longers appears to be used for sensitive data transmission, it would be advisable to remove the reference. Other sections of altered code should be examined to ensure that excess information is not easily revealed through decompilation.
 ## Patch integrity
 Installation of the Easy Smart Confuguration Utility patch 14.0.0.162 executed without error.
 Backwards compatibility between new Utility and existing switch firmware, as well as between existing Utility and new firmware, established connection without error.

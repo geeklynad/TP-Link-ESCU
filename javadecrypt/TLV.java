@@ -1,4 +1,4 @@
-package Key;
+package javadecrypt;
 
 import java.util.*;
 //import com.tplink.smb.easySmartUtility.global.*;

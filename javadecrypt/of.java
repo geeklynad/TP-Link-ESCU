@@ -1,4 +1,4 @@
-package Key;
+package javadecrypt;
 
 import java.util.Arrays; //added for verbose output and main testing
 

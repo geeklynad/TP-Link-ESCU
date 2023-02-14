@@ -2,7 +2,7 @@ Static key encryption between TP Link's Easy Smart Configuration Utility v1.3.10
 
 ### Affected hardware
 
-The Easy Smart Configuration Utility is used to administratively interface with a range of devices in the Easy Smart product line. The following devices, per the compatibility list available at the [Easy Smart Configuration Utility download page](https://www.tp-link.com/us/support/download/tl-sg108e/), are presumed susceptible to the same attack as the utility performs the same static key encryption for all datastream transmissions.
+The Easy Smart Configuration Utility is used to administratively interface with a range of devices in the Easy Smart product line. The following devices, per the compatibility list available at the [Easy Smart Configuration Utility download page](https://www.tp-link.com/us/support/download/tl-sg108e/), are susceptible to the attack as the utility performs the same static key encryption for all datastream transmissions.
 
 * TL-SG1428PE(UN) V1/V1.2/V1.26/V2/V2.2
 * TL-SG1218MPE(UN) V1/V2/V3.2/V3.26/V4/V4.2
@@ -71,13 +71,15 @@ The Python proof of concept is also available in this currently private github r
 
 ### Broadcast domain communication of administrative interface
 
-The utility and hardware with which it communicates transmit packets to the broadcast domain 255.255.255.255. These packets are readily and passively intercepted by any other device on the same VLAN segment. Use of a simple packet sniffer combined with decryption can passively log traffic to obtain credentials.
+The utility and hardware with which it communicates transmit packets to the broadcast domain IPv4 destination address 255.255.255.255, and MAC desctination address ff:ff:ff:ff:ff:ff. These packets are readily and passively intercepted by any other device on the same VLAN segment. Use of a simple packet sniffer combined with decryption can passively log traffic to obtain credentials.
 
 ### Administrative interface responds regardless of VLAN
 
 With the TL-SG105Ev5 on which these tests were performed, the device would respond to utility queries regardless of the VLAN it received the queries from. There are no options to limit management access to specific VLANs. As such, once the administrative credentials are obtained from the attack, the attacker would be capable of gaining control of the device regardless of VLAN.
 
-Even in the case of manually setting a static IP on the TL-SG105Ev5 outside of the VLAN of the attacking device, it still responds and allows connection. There are no options available on the device configuration to prohibit administrative communication to or from a given VLAN.
+Even in the case of manually setting a static IP on the switch outside of the VLAN of the attacking device, it still responds and allows connection. There are no options available on the device configuration to prohibit administrative communication to or from a given VLAN.
+
+A malicious user within a non-management VLAN could therefore potentially create a brute force script to gain access to the switch even in the case of being unable to capture a login session to decrypt.
 
 ### Web interface alternative
 
@@ -97,36 +99,41 @@ Previous reports have been submitted by [chmod750](https://chmod750.wordpress.co
 
 ### Encryption patch
 
-Since those reports, TP-Link has made an attempt to patch the encryption vulnerability by obfuscating the code of the utility and encrypting the key itself with TEA. While this patch increases the difficulty of performing the key extraction, it does not change the use of the static key. In fact the key itself, in its TEA-decrypted plaintext form, has remained consistent per the description of CVE-2017-8077, "a long string beginning with Ei2HNryt."
+Since those reports, TP-Link has made an attempt to patch the encryption vulnerability by obfuscating the code of the utility and encrypting the key itself with TEA. While this patch increases the difficulty of performing the key extraction, it does not change the use of the static key. The key itself, in its TEA-decrypted plaintext form, has remained consistent per the description of CVE-2017-8077, "a long string beginning with Ei2HNryt."
 
 ### Amendment of scope
 
-Previous reports did not account for the use case of VLAN network topology. However, since the Smart Switch line of devices features VLAN capability, VLAN segmentation escape should be a primary consideration of this vulnerability as it enables an attacker to potentially gain additional access beyond the device itself.
+Previous reports did not account for the use case of VLAN network topology. However, since the Smart Switch line of devices prominently feature VLAN capability, VLAN segmentation escape should be a primary consideration of this vulnerability as it enables an attacker to potentially gain additional access beyond the device itself.
 
 ### Amendment of affected products
 
-Previous reports were specific to single devices being analyzed. However, since the vulnerability lies within the administration interface software, the scope of affected hardware should be broadened to include the utility-compatible devices listed by TP-Link.
+Previous reports were specific to single devices being analyzed. However, since the vulnerability lies within the administration interface software utilized by a range of devices, the scope of affected hardware should be broadened to include the utility-compatible devices listed by TP-Link.
 
 ## Mitigation notes
 
 ### For the end user
+In the current state of the Easy Smart Switch product line and Easy Smart Configuration Utility v1.3.10, it should be advised to take the following precautions for logging into the device to perform configuration changes.
 
-* In the current state of Easy Smart Configuration Utility v1.3.10, it should not be advisable to use TL-SG105Ev5 (or other listed hardware) in a capacity of handling VLAN traffic for a security sensitive network. 
+* Switch can be physically isolated from network prior to logging in by disconnecting all trunk lines and access ports and then only connecting to device being used to log in. This will completely eliminate the potential for login credentials to be remotely captured.
 
-* As the communication between utility and device are limited to the VLAN from which an user is connecting to the device, it should be recommended to only access the management interface through a more trusted network segment such as a management VLAN. This should limit the potential of packets being captured. Testing should be performed to verify that there is no "bleed through" of broadcast packets to other VLANs. Again, there does not appear to be a way to limit the switch to respond to only a designated VLAN. 
+* It is unknown if session credential are retransmitted at any interval, so switch should remain isolated for the duration of the session.
 
-* The switch may be relegated to a "dumb" switch capacity by disabling the trunk line and only being served a single untagged VLAN. The attack potential will be limited to only switch access. DoS and other administrative functions through the compromised hardware can still be obtained, but will be limited in scope to the single VLAN.  
+* Alternatively, as the communication between utility and device appear to be limited to the VLAN from which an user is connecting to the device, it may be possible to limit scope of a session's broadcast transmissions to a management VLAN by manually assigning a static IP address for the switch within the management VLAN and only logging in through a device on the management VLAN. However, packet captures should be performed in a test environment to ensure that no broadcast transmissions are leaked to non-management VLANs.
 
-* For a security sensitive use case, the device should be replaced until the devices and utility are patched to sufficiently address the cryptographic weakness.
+As the switch cannot currently be configured to enforce limitations of response across different VLANs, the potential for brute force attacks against login credentials exists. A strong password that is resilient against brute force attacks should be configured on the switch.
+
+The switch may be relegated to a "dumb" switch capacity by disabling the trunk line and only being served a single untagged VLAN. The attack potential will be limited to only switch access. DoS and other administrative functions through the compromised hardware can still be obtained, but will be limited in scope to the single VLAN.  
+
+For a highly security sensitive use case, the device should be replaced until the devices and utility are patched to sufficiently address the cryptographic weakness.
 
 ### For the manufacturer
 
-* The encryption was patched [after](https://chmod750.wordpress.com/2017/04/23/vulnerability-disclosure-tp-link/) [previous](https://goughlui.com/2018/11/03/not-so-smart-tp-link-tl-sg105e-v3-0-5-port-gigabit-easy-smart-switch/) [reports](https://www.pentestpartners.com/security-blog/how-i-can-gain-control-of-your-tp-link-home-switch/), however it still uses a static key. Using a secondary encryption to store a static key in a different form is still a static key. Continued use of a static key, no matter how many times it's encrypted, will ultimately result in the same vulnerability across all devices that use it.
+The encryption was patched [after](https://chmod750.wordpress.com/2017/04/23/vulnerability-disclosure-tp-link/) [previous](https://goughlui.com/2018/11/03/not-so-smart-tp-link-tl-sg105e-v3-0-5-port-gigabit-easy-smart-switch/) [reports](https://www.pentestpartners.com/security-blog/how-i-can-gain-control-of-your-tp-link-home-switch/), however it still uses a static key. Using a secondary encryption to store a static key in a different form is still a static key. Continued use of a static key, no matter how many times it's encrypted, will ultimately result in the same vulnerability across all devices that use it.
 
-* Use of a protocol that utilizes secure key exchanging, such as TLS, would eliminate the issue of static key storage (and the secondary encryption), as fresh keys could be generated per session and exchanged. 
+Use of a protocol that utilizes secure key exchanging, such as TLS, would eliminate the issue of static key storage (and the secondary encryption), as fresh keys could be generated per session and exchanged. 
 
-* Beyond initial discovery, it is inadvisable to persist communication using broadcast domain transmissions. Not only are these communications easily and *passively* intercepted, but the communications are much more difficult to restrict using firewall rules or similar mechnisms. 
+Beyond initial discovery, it is inadvisable to persist communication using broadcast domain transmissions. Not only are these communications easily and passively intercepted, but the communications are much more difficult to restrict using firewall rules or similar mechnisms. 
 
-* Administrative access to the switch should be configurable to limit access and only respond within trusted VLANs.
+Administrative access to the switch should be configurable to limit access and only respond within trusted VLANs.
 
-* HTTPS should be utilized for the web administration interface. Login credentials should be hashed or encrypted. Hashing would be limited to authentication, however, and could not be used for setting username and password. The temptation to use static key encryption for setting username and password should be dissuaded by the readability of the utility's code. Use of an established secure protocol such as HTTPS should therefore be the primary objective.
+HTTPS should be utilized for the web administration interface. Login credentials should be hashed or encrypted. Hashing would be limited to authentication, however, and could not be used for setting username and password. The temptation to use static key encryption for setting username and password should be dissuaded by the readability of the utility's code. Use of an established secure protocol such as HTTPS should therefore be the primary objective.

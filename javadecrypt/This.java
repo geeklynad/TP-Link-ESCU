@@ -1,4 +1,4 @@
-package Key;
+package javadecrypt;
 
 public class This {
     private static int[] mS = new int[256];

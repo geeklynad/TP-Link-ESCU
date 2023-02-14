@@ -7,10 +7,7 @@
 # Requires key obtained through decompiling the utility
 #
 # Expected data type for packet capture is string of hexadecimal string
-#   Example: """5d777eefcbb14f45bfc42eb9cd4d7e51422ba2f5d791aeed508f31d5
-#   c202909a591381c0464e465f27d942b5a44c2c4a3a03355a0b08fa1e541489f773e1"""
-#   Line is split for formatting purposes here, but needs to be single contiguous string
-#   Can be pasted into a raw.txt file as a single line to load in
+#   Example included in raw.txt file
 #   Contains login credentials of user:admin with password:EncryptFail
 #   
 #
