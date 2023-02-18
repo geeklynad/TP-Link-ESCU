@@ -8,7 +8,7 @@ public class main {
     // int array to store post-KSA key
     private static int[] mS = new int[256];
     
-    // checks if XTEA has already been performed
+    // checks if TEA has already been performed
     private static boolean lC;
 
     public static void main(String[] args) {
@@ -16,7 +16,7 @@ public class main {
             return;
         }
 
-        // Send XTEA-encrypted key to be decrypted
+        // Send TEA-encrypted key to be decrypted
         final String h = new of().h(new byte[] {REDACTED});
         
         // KSA phase
@@ -33,7 +33,7 @@ public class main {
         }
         lC = true;
 
-        // Print key post-XTEA
+        // Print key post-TEA
         System.out.println("Pre-KSA key plaintext: " + h);
         // Pre-KSA in bytes can be enabled in Key.of.h()
         // Print key post-KSA
